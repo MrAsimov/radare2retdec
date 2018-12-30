@@ -101,8 +101,7 @@ RUN git clone https://github.com/avast-tl/retdec && \
 
 ENV PATH /home/r2/retdec/retdec-install/bin:$PATH
 
-RUN r2pm init && r2pm update && r2pm -i r2retdec
-
+RUN r2pm init && r2pm update && r2pm -i r2retdec && r2pm -i r2dec
 RUN touch .r2retdec && echo '/home/r2/retdec/retdec-install/bin/retdec-decompiler.py' >> .r2retdec
 
 # Base command for container
