@@ -1,5 +1,5 @@
-# radare2 with retdec plugin
-# ===========================
+# radare2 usage with retdec
+# =========================
 #
 # Run the docker image:
 # $ docker run -ti -v /home/<user>/binaries:/binaries --cap-drop=ALL r2docker:latest r2 /binaries/file
@@ -26,14 +26,9 @@ RUN echo -e "Building versions:\n\
   R2_PIPE_PY_VERSION=${R2_PIPE_PY_VERSION}\n\
   R2_PIPE_NPM_VERSION=${R2_PIPE_NPM_VERSION}"
 
-# Build radare2 in a volume to minimize space used by build
-#VOLUME ["/mnt"]
-
 # Install all build dependencies
 # Install bindings
 # Build and install radare2 on master branch
-# Remove all build dependencies
-# Cleanup
 RUN DEBIAN_FRONTEND=noninteractive dpkg --add-architecture i386 && \
   apt-get update && \
   apt-get install -y \
@@ -91,6 +86,7 @@ RUN r2pm init && \
   r2pm update && \
   chown -R r2:r2 /home/r2/.config
 
+# Install retdec dependency
 RUN git clone https://github.com/avast-tl/retdec && \
 	cd retdec && \
 	mkdir build && \
@@ -101,8 +97,6 @@ RUN git clone https://github.com/avast-tl/retdec && \
 
 ENV PATH /home/r2/retdec/retdec-install/bin:$PATH
 
+# Install r2dec and r2retdec plugins to be able to get better human decompiled C code of the specific assembler function
 RUN r2pm init && r2pm update && r2pm -i r2retdec && r2pm -i r2dec
 RUN touch .r2retdec && echo '/home/r2/retdec/retdec-install/bin/retdec-decompiler.py' >> .r2retdec
-
-# Base command for container
-#CMD ["/bin/bash"]
