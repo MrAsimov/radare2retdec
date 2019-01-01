@@ -8,8 +8,13 @@ Installation
 
 Docker
 ------
+To build the Docker image by default settings (decompiling large binaries can be a problem)
 ```
 docker build -t r2docker:latest .
+```
+To build the Docker image with specified parameters to be used by the retdec-decompiler.py script (might be needed for large binaries), check retdec-decompiler.py help for parameter/flag list
+```
+docker build -t r2docker:latest --build-arg flags="--no-memory-limit --backend-no-opts" .
 ```
 
 Docker use

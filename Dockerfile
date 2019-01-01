@@ -32,6 +32,7 @@ RUN echo -e "Building versions:\n\
 RUN DEBIAN_FRONTEND=noninteractive dpkg --add-architecture i386 && \
   apt-get update && \
   apt-get install -y \
+  perl \
   openssl \
   curl \
   gcc \
@@ -98,5 +99,9 @@ RUN git clone https://github.com/avast-tl/retdec && \
 ENV PATH /home/r2/retdec/retdec-install/bin:$PATH
 
 # Install r2dec and r2retdec plugins to be able to get better human decompiled C code of the specific assembler function
-RUN r2pm init && r2pm update && r2pm -i r2retdec && r2pm -i r2dec
+RUN r2pm init && r2pm update && r2pm -i r2dec
 RUN touch .r2retdec && echo '/home/r2/retdec/retdec-install/bin/retdec-decompiler.py' >> .r2retdec
+ARG flags=""
+# Add parametes to retdec-decompile.py if flags is not empty
+RUN r2pm -i r2retdec
+RUN /bin/bash -c "flagscheck="$(echo $flags | tr -d ' ')"; if [ -n "$flagscheck" ] ; then sed -i -e 's/\`\${retDecPath} --cleanup -o \${a.tmp} -l py --select-ranges \${functionStartAddress}-\${functionEndAddress} \${binaryPath}\`;/\`\${retDecPath} --cleanup -o \${a.tmp} -l py $flags --select-ranges \${functionStartAddress}-\${functionEndAddress} \${binaryPath}\`;/g' -e 's/\`\${retDecPath} --cleanup -o \${a.tmp} --select-ranges \${functionStartAddress}-\${functionEndAddress} \${binaryPath}\`;/\`\${retDecPath} --cleanup -o \${a.tmp} $flags --select-ranges \${functionStartAddress}-\${functionEndAddress} \${binaryPath}\`;/g' /home/r2/.local/share/radare2/r2pm/git/r2retdec/r2retdec.js; fi"
