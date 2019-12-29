@@ -4,8 +4,7 @@
 # Run the docker image:
 # $ docker run -ti -v /home/<user>/binaries:/binaries --cap-drop=ALL r2docker:latest r2 /binaries/file
 
-# Using debian 9 as base image.
-FROM debian:9
+FROM ubuntu:19.10
 
 # Label base
 LABEL r2docker latest
@@ -29,48 +28,24 @@ RUN echo -e "Building versions:\n\
 # Install all build dependencies
 # Install bindings
 # Build and install radare2 on master branch
-RUN DEBIAN_FRONTEND=noninteractive dpkg --add-architecture i386 && \
-  apt-get update && \
+RUN apt-get update && \
   apt-get install -y \
-  perl \
-  openssl \
-  curl \
-  gcc \
-  git \
-  bison \
-  pkg-config \
-  make \
-  glib-2.0 \
-  libc6:i386 \
-  libncurses5:i386 \
-  libstdc++6:i386 \
-  gnupg2 \
-  sudo && \
-  curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
-  apt-get install -y nodejs python-pip \
-	build-essential                                     \
-	cmake                                               \
-	git                                                 \
-	perl                                                \
-	python3                                             \
-	doxygen                                             \
-	graphviz                                            \
-	upx                                                 \
-	flex                                                \
-	zlib1g-dev                                          \
-	autoconf                                            \
-	automake                                            \
-	pkg-config                                          \
-	m4                                                  \
-	libtool                                             \
-  && \
-  pip install r2pipe=="$R2_PIPE_PY_VERSION" && \
-  npm install --unsafe-perm -g "r2pipe@$R2_PIPE_NPM_VERSION" && \
-  git clone -b "$R2_VERSION" -q --depth 1 https://github.com/radare/radare2.git && \
-  cd radare2 && \
-  ./sys/install.sh && \
-  make install && \
-  apt-get install -y xz-utils
+  build-essential cmake git perl python3 autoconf automake libtool \
+  pkg-config m4 zlib1g-dev upx doxygen graphviz python-pip xz-utils \
+  apt-utils curl openssl gcc g++
+
+
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
+
+RUN apt-get update && apt-get install -y nodejs
+
+RUN pip install r2pipe=="$R2_PIPE_PY_VERSION"
+
+RUN npm install --unsafe-perm -g "r2pipe@$R2_PIPE_NPM_VERSION"
+
+RUN git clone -b "$R2_VERSION" -q --depth 1 https://github.com/radare/radare2.git
+
+RUN cd radare2 && ./sys/install.sh && make install
 
 # Create non-root user
 RUN useradd -m r2 && \
@@ -88,13 +63,15 @@ RUN r2pm init && \
   chown -R r2:r2 /home/r2/.config
 
 # Install retdec dependency
-RUN git clone https://github.com/avast-tl/retdec && \
-	cd retdec && \
-	mkdir build && \
-	cd build && \
-	cmake .. -DCMAKE_INSTALL_PREFIX=/home/r2/retdec/retdec-install && \
-	make -j$(nproc) && \
-	make install
+RUN git clone https://github.com/avast-tl/retdec
+
+RUN cd retdec && mkdir build && cd build 
+
+RUN cd retdec/build && cmake .. -DCMAKE_INSTALL_PREFIX=/home/r2/retdec/retdec-install
+
+RUN cd retdec/build && make -j$(nproc)
+
+RUN cd retdec/build && make install
 
 ENV PATH /home/r2/retdec/retdec-install/bin:$PATH
 
